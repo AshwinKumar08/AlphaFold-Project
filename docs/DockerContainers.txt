@@ -1,0 +1,57 @@
+# Docker containers
+
+
+## Container frontend
+This container will run your server.
+
+You can access this container by the name sbi-project-3-frontend.
+
+### Folder ./app
+In this folder is your programm. This folder is mounted as read-only to /app/app in the docker container.
+
+### Folder ./tests
+In this folder are the testcases that will run before your server will start.
+You also might run these test with: ./runTests.sh
+This folder is mounted read-only to /app/tests in your docker container.
+
+### Folder ./data
+This folder is for storing data your need to read or write.
+This folder is mounted to /app/data in your docker container.
+
+### Folder ./results
+This folder contains data the backend will create.
+It is mounted to /app/results in your docker container.
+
+
+## Container db
+Source and documentetion: https://hub.docker.com/_/mariadb
+
+You can access this container by the name sbi-project-3-db.
+E.g. for executing mysql commands run:
+  docker container exec -it sbi-project-3-db mysql -u frontend -p af-frontend
+
+### Folder ./db/data
+In this folder the database will be stored.
+
+### Folder ./db/initialTables.sql
+This file contains MYSQL commands that will be run on first start of the database (e.g. ./db/data is empty) to initialize your tables.
+
+
+
+## Container backend
+This container contains a simulated backend.
+
+
+### File ./backend/fake.py
+This is the script for the backend. Until the actual one is done this will simulate the actions the backend would do.
+
+### Folder ./results
+The backend will write a zip file in this folder for every task it will find.
+
+
+
+
+# Folder exampleClient
+This folder contains some scripts to execute some actions
+an actual client would do.
+

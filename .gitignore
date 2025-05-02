@@ -1,0 +1,11 @@
+__pycache__
+data/*
+results/*
+db/data/*
+*.swp
+*.out
+*.log
+*.aux
+*.fasta
+*.csv
+*.zip

@@ -1,0 +1,52 @@
+services:
+    frontend:
+        restart: unless-stopped
+        build: docker
+        container_name: af_frontend
+        ports:
+          - 5000:5000
+        volumes:
+          - ./app:/app/app:ro
+          - ./tests:/app/tests:ro
+          - ./data:/app/data:rw
+          - ./results:/app/results:rw
+        environment:
+          DB_HOST: sbi-project-3-db
+          DB_DATABASE: af-frontend
+          DB_USER: frontend
+          DB_PASSWORD: frontend-secret-password
+        links:
+          - db
+
+    db:
+      image: mariadb:10
+      restart: unless-stopped
+      container_name: af_db
+      environment:
+          MARIADB_ROOT_PASSWORD: my-secret-root-password
+          MARIADB_DATABASE: af-frontend
+          MARIADB_USER: frontend
+          MARIADB_PASSWORD: frontend-secret-password
+          MARIADB_AUTO_UPGRADE: 1
+      volumes:
+          - ./db/initialTables.sql:/docker-entrypoint-initdb.d/initialTables.sql:ro
+          - ./db/data:/var/lib/mysql
+
+    backend:
+        restart: unless-stopped
+        build: docker
+        container_name: af_backend
+        user: www-data
+        command: python3 /app/fake.py
+        volumes:
+          - ./backend/fake.py:/app/fake.py:ro
+          - ./results:/app/results:rw
+        environment:
+          DB_HOST: af_db
+          DB_DATABASE: af-frontend
+          DB_USER: frontend
+          DB_PASSWORD: frontend-secret-password
+        links:
+          - db
+          - frontend
+

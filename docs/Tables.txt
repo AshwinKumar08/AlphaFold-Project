@@ -1,0 +1,85 @@
+# Table 'af_tasks'
+Entries for this table will be created by the frontend.
+
+fields:
+- 'id' (Int, Key)
+  Unique identifier for a task.
+
+- 'enabled' (Int)
+  0 -> This entry should be ignored by the backend.
+  1 -> This entry can be processed by the backend.
+
+- 'fasta' (Text)
+  This is the field for the input data. You will find some examples in the folder ./docs/examples
+
+- userId (Int)
+  The id of the user that own this task.
+
+- name (varchar(64))
+  A name the user can give this task to identify his tasks.
+  The value in this field might not be unique.
+
+- userComment (text)
+  A comment the user might add to this task.
+
+- 'model_preset' (Varchar(32))
+  This is a parameter for alphafold. Valid values are:
+  - ''
+  - 'monomer'
+  - 'monomer_casp14'
+  - 'monomer_ptm'
+  - 'multimer'
+
+- 'full_dbs' (Tinyint)
+  These values will lead to these parmeters for processing. Star marks the default value.
+  0 ->  --db_preset=reduced_dbs
+  1 ->* --db_preset=full_dbs
+
+- 'models_to_relax' (Tinyint)
+  These values will lead to these parmeters for processing. Star marks the default value.
+  0 ->  --models_to_relax=none
+  1 ->  --models_to_relax=all
+  2 ->* --models_to_relax=best
+
+- 'enable_gpu_relax' (Tinyint)
+  These values will lead to these parmeters for processing. Star marks the default value.
+  0 ->  --enable_gpu_relax=false
+  1 ->* --enable_gpu_relax=true
+
+- 'max_template_data' (Varchar(11))
+  A date string in format 'year-month-day'.
+  If empty the day of start of the processing will be used.
+
+
+
+# Table 'af_results'
+Entries for this table will be created by the backend.
+
+- 'id' (Int, Key)
+  This will be the same number as the coresponding entry in 'af-tasks'.
+
+- 'state' (Int)
+  0 -> new and unprocessed entry. (file entries are ivalid)
+  1 -> The backend is working on this entry. (log_file is valid, results_file is invalid)
+  2 -> This entry was processed and there are results. (files entries are valid)
+  3 -> This entry was processed and there was some errors. (files entries are valid)
+
+- 'results_file' (varchar(64))
+  The path and filename of the generated output. It is relative to ./results
+  Only valid for state 2 and 3.
+
+- 'log_file' (varchar(64))
+  The path and filename of the generated computation protocol. It is relative to ./results
+  Only valid for state 1, 2 and 3.
+
+
+
+# Table 'af_user'
+- 'id' (Int, Key)
+  Unique identifier for an user.
+
+- 'name' (varchar(64))
+  A name for this user.
+  The name should be unique.
+  
+ 
