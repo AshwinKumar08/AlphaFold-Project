@@ -1,9 +1,18 @@
 from flask import request
 
+import time
+
+global users
+global sessions
+global nextSessionNr
+global serverId
+
+serverId = int(time.time())
+
 fakeUser1 = { "id": 1, "name": "test_user", "is_admin": 0 }
 fakeUser2 = { "id": 2, "name": "test_admin", "is_admin": 1 }
 
-users = { 1: fakeUser1, 2: fakeUser2 }
+users = [ fakeUser1, fakeUser2 ]
 
 sessions = {}
 nextSessionNr = 1
@@ -23,6 +32,7 @@ def isAdmin(sessionUUID):
 
 def getUserFromSession(sessionUUID):
   # TODO: actually search the session and the user in the database
+  global sessions
   if sessionUUID is not None and sessionUUID in sessions:
     s = sessions[sessionUUID]
     return getUser(s["userId"])
@@ -30,15 +40,17 @@ def getUserFromSession(sessionUUID):
 
 def getUser(userId):
   # TODO: actually search the user in the database
-  if userId in users:
-    return users[userId]
-  else:
-    return None
+  global users
+  userId = int(userId)
+  for u in users:
+    if u["id"] == userId:
+      return u
+  return None
 
 def getUserByName(userName):
   # TODO: actually search the user in the database
-  for k in users.keys():
-    u = users[k]
+  global users
+  for u in users:
     if u["name"] == userName:
       return u
 
@@ -47,28 +59,53 @@ def getUserByName(userName):
 def newSession(userId):
   # TODO: implement session management
   global nextSessionNr
+  global sessions
+  global serverId
   user = getUser(userId)
   if user is None:
     return None
 
-  sessionId = f"{nextSessionNr}-{userId}"
+  sessionId = f"{serverId}-{nextSessionNr}-{userId}"
   nextSessionNr += 1
 
   s = { "sessionId" : sessionId, "userId" : userId }
   sessions[sessionId] = s
   return sessionId
 
+def getListOfUsers():
+  global users
+  # TODO: Lookup database
+  return users
+
+def getListOfSessions():
+  global sessions
+  # TODO: Lookup database
+  return sessions
+
+def doLogin(userName):
+  # TODO: implement this
+  user = getUserByName(userName)
+  if user is not None:
+    return newSession(user["id"])
+  return None
+
+def doLogout(sessionUUID):
+  # TODO: implement this
+  global sessions
+  if sessionUUID in sessions:
+    del sessions[sessionUUID]
+
 
 def createEntrypoints(webapp):
-  @webapp.get("/<sessionUUID>/user")
+  @webapp.get("/api/1.0/<sessionUUID>/user")
   def entrypoint_list_users(sessionUUID):
     if not isLoggedIn(sessionUUID) or not isAdmin(sessionUUID):
       return { "status": "please login", "url": ["/login"] }, 403
 
     # TODO: Read users from database
-    return {"status": "ok", "users": users }
+    return {"status": "ok", "users": getListOfUsers() }
 
-  @webapp.put("/<sessionUUID>/user")
+  @webapp.put("/api/1.0/<sessionUUID>/user")
   def entrypoint_insert_user(sessionUUID):
     if not isLoggedIn(sessionUUID) or not isAdmin(sessionUUID):
       return { "status": "please login", "url": ["/login"] }, 403
@@ -78,7 +115,7 @@ def createEntrypoints(webapp):
     return {"status": "temporary not available" }, 500
 
 
-  @webapp.get("/<sessionUUID>/user/<userIdText>")
+  @webapp.get("/api/1.0/<sessionUUID>/user/<userIdText>")
   def entrypoint_show_user(sessionUUID, userIdText):
     if not isLoggedIn(sessionUUID) or not isAdmin(sessionUUID):
       return { "status": "please login", "url": ["/login"] }, 403
@@ -95,7 +132,7 @@ def createEntrypoints(webapp):
       return { "status": "not found" }, 404
 
 
-  @webapp.delete("/<sessionUUID>/user/<userIdText>")
+  @webapp.delete("/api/1.0/<sessionUUID>/user/<userIdText>")
   def entrypoint_remove_user(sessionUUID, userIdText):
     if not isLoggedIn(sessionUUID) or not isAdmin(sessionUUID):
       return { "status": "please login", "url": ["/login"] }, 403
@@ -112,7 +149,7 @@ def createEntrypoints(webapp):
       return { "status": "not found" }, 404
 
 
-  @webapp.post("/<sessionUUID>/user/<userIdText>")
+  @webapp.post("/api/1.0/<sessionUUID>/user/<userIdText>")
   def entrypoint_edit_user(sessionUUID, userIdText):
     if not isLoggedIn(sessionUUID) or not isAdmin(sessionUUID):
       return { "status": "please login", "url": ["/login"] }, 403
@@ -130,15 +167,13 @@ def createEntrypoints(webapp):
       return { "status": "not found" }, 404
 
 
-  @webapp.get("/login")
+  @webapp.get("/api/1.0/login")
   def entrypoint_login():
     # TODO: actually log in
     sendData = request.get_json(force=True)
     sessionUUID = None
     if "userName" in sendData:
-      user = getUserByName(sendData["userName"])
-      if user is not None:
-        sessionUUID = newSession(user["id"])
+      sessionUUID = doLogin(sendData["userName"])
 
     if sessionUUID is not None and isLoggedIn(sessionUUID):
       return { "status": "ok", "sessionUUID": sessionUUID }
@@ -147,10 +182,9 @@ def createEntrypoints(webapp):
 
 
 
-  @webapp.get("/<sessionUUID>/logout")
+  @webapp.get("/api/1.0/<sessionUUID>/logout")
   def entrypoint_logout(sessionUUID):
-    if sessionUUID in sessions:
-      del sessions[sessionUUID]
+    doLogout(sessionUUID)
     # TODO: actually log out
     return { "status": "OK" }
 

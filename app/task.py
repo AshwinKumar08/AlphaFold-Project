@@ -35,6 +35,11 @@ fakeTasks = [ fakeTask1, fakeTask2 ]
 
 def getTask(taskId):
   # TODO: actually search the task in the database
+  x = int(taskId)
+  if f"{x}" != f"{taskId}":
+    return None
+  taskId = x
+
   if taskId == 1:
     return fakeTask1
   elif taskId == 2:
@@ -44,34 +49,31 @@ def getTask(taskId):
 
 
 def createEntrypoints(webapp):
-  @webapp.get("/<sessionUUID>/task")
+  pleaseLogin = ({ "status": "please login", "url": ["/api/1.0/login"] }, 403)
+
+  @webapp.get("/api/1.0/<sessionUUID>/task")
   def entrypoint_list_tasks(sessionUUID):
     if not user.isLoggedIn(sessionUUID):
-      return { "status": "please login", "url": ["/login"] }, 403
+      return pleaseLogin
 
     # TODO: Read tasks from database
     return {"status": "ok", "tasks": fakeTasks }
 
-  @webapp.put("/<sessionUUID>/task")
+  @webapp.put("/api/1.0/<sessionUUID>/task")
   def entrypoint_insert_task(sessionUUID):
     if not user.isLoggedIn(sessionUUID):
-      return { "status": "please login", "url": ["/login"] }, 403
+      return pleaseLogin
 
     sendData = request.get_json(force=True)
     # TODO: store the new task
     return {"status": "temporary not available" }, 500
 
 
-  @webapp.get("/<sessionUUID>/task/<taskIdText>")
-  def entrypoint_show_task(sessionUUID, taskIdText):
+  @webapp.get("/api/1.0/<sessionUUID>/task/<taskId>")
+  def entrypoint_show_task(sessionUUID, taskId):
     if not user.isLoggedIn(sessionUUID):
-      return { "status": "please login", "url": ["/login"] }, 403
+      return pleaseLogin
 
-    taskId = int(taskIdText)
-    if f"{taskId}" != taskIdText:
-      return { "status": "not found'" }, 404
-
-    task = None
     # TODO: Find task in database
     task = getTask(taskId)
     if task is not None:
@@ -80,14 +82,10 @@ def createEntrypoints(webapp):
       return { "status": "not found" }, 404
 
 
-  @webapp.delete("/<sessionUUID>/task/<taskIdText>")
-  def entrypoint_remove_task(sessionUUID, taskIdText):
+  @webapp.delete("/api/1.0/<sessionUUID>/task/<taskId>")
+  def entrypoint_remove_task(sessionUUID, taskId):
     if not user.isLoggedIn(sessionUUID):
-      return { "status": "please login", "url": ["/login"] }, 403
-
-    taskId = int(taskIdText)
-    if f"{taskId}" != taskIdText:
-      return { "status": "not found'" }, 404
+      return pleaseLogin
 
     # TODO: Remove the task in database
     task = getTask(taskId)
@@ -97,14 +95,10 @@ def createEntrypoints(webapp):
       return { "status": "not found" }, 404
 
 
-  @webapp.post("/<sessionUUID>/task/<taskIdText>")
-  def entrypoint_edit_task(sessionUUID, taskIdText):
+  @webapp.post("/api/1.0/<sessionUUID>/task/<taskId>")
+  def entrypoint_edit_task(sessionUUID, taskId):
     if not user.isLoggedIn(sessionUUID):
-      return { "status": "please login", "url": ["/login"] }, 403
-
-    taskId = int(taskIdText)
-    if f"{taskId}" != taskIdText:
-      return { "status": "not found'" }, 404
+      return pleaseLogin
 
     sendData = request.get_json(force=True)
     # TODO: Remove the task in database
@@ -115,14 +109,10 @@ def createEntrypoints(webapp):
       return { "status": "not found" }, 404
 
 
-  @webapp.get("/<sessionUUID>/task/<taskIdText>/result")
-  def entrypoint_return_result(sessionUUID, taskIdText):
+  @webapp.get("/api/1.0/<sessionUUID>/task/<taskId>/result")
+  def entrypoint_return_result(sessionUUID, taskId):
     if not user.isLoggedIn(sessionUUID):
-      return { "status": "please login", "url": ["/login"] }, 403
-
-    taskId = int(taskIdText)
-    if f"{taskId}" != taskIdText:
-      return { "status": "not found'" }, 404
+      return pleaseLogin
 
     # TODO: Remove the task in database
     task = getTask(taskId)
@@ -139,14 +129,10 @@ def createEntrypoints(webapp):
 
 
 
-  @webapp.get("/<sessionUUID>/task/<taskIdText>/log")
-  def entrypoint_return_log(sessionUUID, taskIdText):
+  @webapp.get("/api/1.0/<sessionUUID>/task/<taskId>/log")
+  def entrypoint_return_log(sessionUUID, taskId):
     if not user.isLoggedIn(sessionUUID):
-      return { "status": "please login", "url": ["/login"] }, 403
-
-    taskId = int(taskIdText)
-    if f"{taskId}" != taskIdText:
-      return { "status": "not found'" }, 404
+      return pleaseLogin
 
     # TODO: Remove the task in database
     task = getTask(taskId)
