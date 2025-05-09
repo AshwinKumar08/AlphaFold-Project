@@ -2,10 +2,10 @@
 
 from api import apiCall
 
-r = apiCall("/login", body={ "userName": "test_user" })
+r = apiCall("/api/1.0/login", body={ "userName": "test_user" })
 if r["status"] == "ok":
   sessionUUID = r["sessionUUID"]
 else:
   exit(1)
 
-print(apiCall(f"/{sessionUUID}/task"))
+print(apiCall(f"/api/1.0/{sessionUUID}/task"))
