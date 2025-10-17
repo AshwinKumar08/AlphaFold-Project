@@ -6,13 +6,10 @@ from os import mkdir
 from os.path import isdir
 import zipfile
 
-global mydb
-mydb = None
-
 def dbUp():
     global mydb
     mydb = mysql.connector.connect(
-          host="af_db",
+          host="db",
           user="frontend",
           password="frontend-secret-password",
           database="af-frontend"
@@ -22,7 +19,6 @@ def dbDown():
     global mydb
     mydb.close()
     mydb = None
-
 
 def trace(text):
     print(text, file=sys.stderr)
@@ -38,7 +34,6 @@ def addProcessRow(taskId, userId):
     mycursor.execute(sql, val)
 
     mydb.commit()
-
 
 def initNewTasks():
     mycursor = mydb.cursor()
@@ -95,6 +90,7 @@ time.sleep(10)
 
 while True:
     dbUp()
+    print("running DBb")
     initNewTasks()
     t = getNextTask()
     if t is not None:

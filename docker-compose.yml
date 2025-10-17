@@ -9,12 +9,17 @@ services:
           - ./app:/app/app:ro
           - ./tests:/app/tests:ro
           - ./data:/app/data:rw
+          - ./logs:/app/logs:rw
           - ./results:/app/results:rw
         environment:
-          DB_HOST: sbi-project-3-db
+          DB_HOST: af_db
           DB_DATABASE: af-frontend
           DB_USER: frontend
           DB_PASSWORD: frontend-secret-password
+          DB_PORT: 3306
+        depends_on:
+          db:
+            condition: service_healthy
         links:
           - db
 
@@ -31,6 +36,12 @@ services:
       volumes:
           - ./db/initialTables.sql:/docker-entrypoint-initdb.d/initialTables.sql:ro
           - ./db/data:/var/lib/mysql
+      healthcheck:
+          test: ["CMD", "mysql", "-u", "frontend", "--password=frontend-secret-password", "af-frontend", "-B", "-e", "select * from af_users limit 1"]
+          interval: 10s
+          timeout: 3s
+          retries: 12
+          
 
     backend:
         restart: unless-stopped
@@ -46,6 +57,8 @@ services:
           DB_DATABASE: af-frontend
           DB_USER: frontend
           DB_PASSWORD: frontend-secret-password
+        depends_on:
+          - db
         links:
           - db
           - frontend

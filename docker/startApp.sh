@@ -2,6 +2,7 @@
 echo "="
 echo "= Fixing file owner for /app/data"
 echo "==================================="
+chown -R www-data:www-data /app/logs
 chown -R www-data:www-data /app/data
 chown -R www-data:www-data /app/results
 echo "="

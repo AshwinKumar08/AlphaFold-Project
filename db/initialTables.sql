@@ -1,35 +1,45 @@
 
 CREATE TABLE af_users (
-  id    int         not null auto_increment,
-  name  varchar(64) not null UNIQUE,
+  id               INT           NOT NULL AUTO_INCREMENT,
+  name             VARCHAR(64)   NOT NULL UNIQUE,
+  user_password    VARCHAR(255)  NOT NULL,
+  is_admin         TINYINT       NOT NULL DEFAULT 0,
   PRIMARY KEY (id)
 );
 
 CREATE TABLE af_tasks (
-  id                int         not null auto_increment,
-  enabled           tinyint     not null default 0,
-  userId            int         not null,
-  name              varchar(64) not null default '',
-  usercomment       text        not null default '',
-  fasta             text        not null default '',
-  model_preset      varchar(32) not null default '',
-  full_dbs          tinyint     not null default 1,
-  models_to_relax   tinyint     not null default 2,
-  enable_gpu_relax  tinyint     not null default 1,
-  max_template_data varchar(11) not null default '',
+  id                INT         NOT NULL AUTO_INCREMENT,
+  enabled           TINYINT     NOT NULL DEFAULT 0,
+  userId            INT         NOT NULL,
+  name              VARCHAR(64) NOT NULL DEFAULT '',
+  usercomment       TEXT        NOT NULL DEFAULT '',
+  fasta             TEXT        NOT NULL DEFAULT '',
+  model_preset      VARCHAR(32) NOT NULL DEFAULT '',
+  full_dbs          TINYINT     NOT NULL DEFAULT 1,
+  models_to_relax   TINYINT     NOT NULL DEFAULT 2,
+  enable_gpu_relax  TINYINT     NOT NULL DEFAULT 1,
+  max_template_date VARCHAR(11) NOT NULL DEFAULT '',
   PRIMARY KEY (id),
-  FOREIGN KEY (userId) REFERENCES af_users(id)
+  FOREIGN KEY (userId) REFERENCES af_users(id) ON DELETE CASCADE
 );
-
 
 CREATE TABLE af_results (
-  id            int         not null,
-  state         tinyint     not null default 0,
-  results_file  varchar(64) not null default '',
-  log_file      varchar(64) not null default '',
+  id            INT         NOT NULL,
+  state         TINYINT     NOT NULL DEFAULT 0,
+  results_file  VARCHAR(64) NOT NULL DEFAULT '',
+  log_file      VARCHAR(64) NOT NULL DEFAULT '',
   PRIMARY KEY (id),
-  FOREIGN KEY (id) REFERENCES af_tasks(id)
+  FOREIGN KEY (id) REFERENCES af_tasks(id) ON DELETE CASCADE
 );
 
+INSERT INTO af_users (name, user_password, is_admin) VALUES ('testuser', '$2b$12$.IaNt46x6klPO0FiyDtc8.9hofKaL2BIp4FmBKaOxbkITpO6Y2yXq',1);
 
-insert into af_users (name) values ('testuser');
+CREATE TABLE IF NOT EXISTS af_sessions (
+    id                  VARCHAR(255) NOT NULL UNIQUE, 
+    userId              INT          NOT NULL,
+    expires_at          DATETIME     NOT NULL,
+    created_at          DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    session_status      TINYINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    FOREIGN KEY (userId) REFERENCES af_users(id) ON DELETE CASCADE
+);

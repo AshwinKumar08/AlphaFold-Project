@@ -12,7 +12,7 @@ class TestEntrypoints(unittest.TestCase):
         Test the "hello world" entrypoint.
         It will have always a fixed result.
         """
-        self.assertEqual(app.entrypoint_root(), { "status": "ok", "url": ["/task", "/login" })
+        self.assertEqual(app.entrypoint_root(), { "status": "ok", "url": ["/task", "/login" ]})
 
     def test_items(self):
         """
