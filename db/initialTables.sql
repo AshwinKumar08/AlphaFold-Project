@@ -32,7 +32,7 @@ CREATE TABLE af_results (
   FOREIGN KEY (id) REFERENCES af_tasks(id) ON DELETE CASCADE
 );
 
-INSERT INTO af_users (name, user_password, is_admin) VALUES ('testuser', '$2b$12$.IaNt46x6klPO0FiyDtc8.9hofKaL2BIp4FmBKaOxbkITpO6Y2yXq',1);
+INSERT INTO af_users (name, user_password, is_admin) VALUES ('testuser', '$2b$12$ko9Vd0bgu8Q8YOiFSkA79OtocB1CpYNw065HuslieJPABH.xSBR4a',1);
 
 CREATE TABLE IF NOT EXISTS af_sessions (
     id                  VARCHAR(255) NOT NULL UNIQUE, 
