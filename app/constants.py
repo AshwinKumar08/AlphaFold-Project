@@ -114,6 +114,12 @@ SQL_INSERT_USER_BY_NAME = "INSERT INTO af_users (name, user_password, is_admin) 
 
 SQL_DELETE_USER_BY_ID = "DELETE FROM af_users WHERE id = %s"
 
+SQL_UPDATE_USER_ROLE = "UPDATE af_users SET is_admin = %s WHERE id = %s"
+
+SQL_UPDATE_USER_NAME = "UPDATE af_users SET name = %s WHERE id = %s"
+
+SQL_UPDATE_USER_PASSWORD = "UPDATE af_users SET user_password = %s WHERE id = %s"
+
 SESSION_EXPIRY_HOURS = 2
 
 SESSION_ACTIVE = 1

@@ -267,14 +267,14 @@ def createEntrypoints(webapp):
       return ({ "status": "error" }, 500)
     
 
-def registerUser(userName, password):
+def registerUser(userName, password, is_admin: int = 0):
     try:
       mycursor.execute(app_constants.SQL_SELECT_USER_BY_NAME, [userName])
       if mycursor.fetchone():
           return False
 
       hashed_pw = create_secure_password(password)
-      mycursor.execute(app_constants.SQL_INSERT_USER_BY_NAME, [userName, hashed_pw, 0])
+      mycursor.execute(app_constants.SQL_INSERT_USER_BY_NAME, [userName, hashed_pw, int(is_admin)])
       mydb.commit()
       return True
     except Exception as e:
@@ -290,3 +290,53 @@ def deleteUser(userId):
     except Exception as e:
       trace(f"Error deleting user: {e}")
       return False
+
+def updateUserRole(userId, isAdmin):
+  try:
+    mycursor.execute(app_constants.SQL_UPDATE_USER_ROLE, [int(isAdmin), int(userId)])
+    mydb.commit()
+    return True
+  except Exception as e:
+    trace(f"Error updating user role: {e}")
+    return False
+  
+def updateUserName(userId, newName):
+  try:
+    # Validate
+    if not newName or not str(newName).strip():
+      trace("Invalid user name provided for update")
+      return False
+
+    newName = str(newName).strip()
+
+    # Check duplicate name owned by other user
+    mycursor.execute(app_constants.SQL_SELECT_USER_BY_NAME, [newName])
+    row = mycursor.fetchone()
+    if row and int(row[0]) != int(userId):
+      trace("User name already exists for another user")
+      return False
+
+    mycursor.execute(app_constants.SQL_UPDATE_USER_NAME, [newName, int(userId)])
+    mydb.commit()
+    return True
+  except Exception as e:
+    trace(f"Error updating user name: {e}")
+    return False
+
+def updateUserPassword(userId, newPassword):
+  try:
+    if not newPassword or len(str(newPassword)) < 4:
+      trace("Password too short or invalid")
+      return False
+
+    hashed = create_secure_password(str(newPassword))
+    if not hashed:
+      trace("Failed to hash new password")
+      return False
+
+    mycursor.execute(app_constants.SQL_UPDATE_USER_PASSWORD, [hashed, int(userId)])
+    mydb.commit()
+    return True
+  except Exception as e:
+    trace(f"Error updating user password: {e}")
+    return False

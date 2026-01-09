@@ -158,6 +158,37 @@ def createEntrypoints(webapp):
       html += f"<tr><th>User Name</th><td>{user[1]}</td></tr>"
       html += f"<tr><th>Admin User</th><td>{'True' if user[3] else'False'}</td></tr>"
       html += '</table>'
+      html += f"""
+      <form action='/ui/{sessionUUID}/user/{user[0]}' method='POST' style='margin-top: 1.5rem;'>
+        <input type='hidden' name='action' value='update-role' />
+        <div class='form-group'>
+          <label class='form-label' for='isAdmin'>Set Admin Role</label>
+          <select name='isAdmin' id='isAdmin' class='form-input'>
+            <option value='1' {'selected' if user[3] else ''}>Yes</option>
+            <option value='0' {'' if user[3] else 'selected'}>No</option>
+          </select>
+        </div>
+        <button type='submit' class='login-btn'>Update Role</button>
+      </form>
+      """
+      html += f"""
+      <form action='/ui/{sessionUUID}/user/{user[0]}' method='POST' style='margin-top: 1.5rem;'>
+        <input type='hidden' name='action' value='update-details' />
+        <div class='form-group'>
+          <input type='text' id='name' name='name' class='form-input' value='{user[1]}' placeholder=' ' />
+          <label class='form-label' for='name'>User Name</label>
+        </div>
+        <div class='form-group'>
+          <input type='password' id='password' name='password' class='form-input' placeholder=' ' />
+          <label class='form-label' for='password'>New Password (optional)</label>
+        </div>
+        <div class='form-group'>
+          <input type='password' id='password2' name='password2' class='form-input' placeholder=' ' />
+          <label class='form-label' for='password2'>Confirm Password</label>
+        </div>
+        <button type='submit' class='login-btn'>Save Changes</button>
+      </form>
+      """
       html += '</div>'
       return htmlBase(html, title=f"Profile: {user[1]}", sessionUUID=sessionUUID, include_styles=True)
     else:
@@ -197,13 +228,90 @@ def createEntrypoints(webapp):
     if f"{userId}" != userIdText:
       return htmlBase("<p>This item was not found.</p>", sessionUUID=sessionUUID)
 
-    # TODO: Edit the user in database
+    action = request.form.get("action", "update-details")
+
+    if action == "update-role":
+      newIsAdmin = request.form.get("isAdmin")
+      is_admin_val = 1 if str(newIsAdmin) in ["1", "true", "True", "on", "yes"] else 0
+
+      updated = app.user.updateUserRole(userId, is_admin_val)
+      user = app.user.getUser(userId)
+
+      if updated and user is not None:
+        return htmlBase(
+          f"""
+          <div class='content-card'>
+            <div class='success-message'>✅ The user <strong>{user[1]}</strong> role was updated to <strong>{'Admin' if user[3] else 'User'}</strong>.</div>
+            <a href='/ui/{sessionUUID}/user' class='action-link'>Back to Users</a>
+          </div>
+          """,
+          sessionUUID=sessionUUID,
+          include_styles=True,
+          title="Role Updated"
+        )
+      else:
+        return htmlBase(
+          f"""
+          <div class='content-card'>
+            <div class='error-message'>❌ Unable to update role for user ID {userId}.</div>
+            <a href='/ui/{sessionUUID}/user/{userId}' class='action-link'>Back to Profile</a>
+          </div>
+          """,
+          sessionUUID=sessionUUID,
+          include_styles=True,
+          title="Update Failed"
+        )
+      
+    # Default: update user details (name/password)
+    new_name = request.form.get("name", "").strip()
+    pw1 = request.form.get("password", "")
+    pw2 = request.form.get("password2", "")
+
     user = app.user.getUser(userId)
-    newIsAdmin = request.form["isAdmin"]
-    if user is not None:
-      return htmlBase(f"<p>The user '{user['name']} was successfully changed.</p>", sessionUUID=sessionUUID)
-    else:
+    if user is None:
       return htmlBase("<p>This item was not found.</p>", sessionUUID=sessionUUID)
+
+    messages = []
+    ok = True
+
+    if new_name and new_name != user[1]:
+      if not app.user.updateUserName(userId, new_name):
+        ok = False
+        messages.append("❌ Failed to update user name (maybe already taken?)")
+      else:
+        messages.append("✅ User name updated")
+
+    if pw1:
+      if pw1 != pw2:
+        ok = False
+        messages.append("❌ Passwords do not match")
+      else:
+        if not app.user.updateUserPassword(userId, pw1):
+          ok = False
+          messages.append("❌ Failed to update password")
+        else:
+          messages.append("✅ Password updated")
+
+    # Refresh user
+    user = app.user.getUser(userId)
+
+    status_block = (
+      f"<div class='success-message'>{' '.join(messages) if messages else 'No changes made.'}</div>"
+      if ok
+      else f"<div class='error-message'>{' '.join(messages)}</div>"
+    )
+
+    return htmlBase(
+      f"""
+      <div class='content-card'>
+        {status_block}
+        <a href='/ui/{sessionUUID}/user/{userId}' class='action-link'>Back to Profile</a>
+      </div>
+      """,
+      sessionUUID=sessionUUID,
+      include_styles=True,
+      title="User Updated"
+    )
 
 
   @webapp.get("/ui/login")
@@ -237,6 +345,10 @@ def createEntrypoints(webapp):
 
   @webapp.get("/ui/<sessionUUID>/register")
   def entrypoint_ui_register_form(sessionUUID):
+    # Only admins can access registration
+    if not app.user.isLoggedIn(sessionUUID) or not app.user.isAdmin(sessionUUID):
+      return showPleaseLogin()
+    
     return htmlBase(f"""           
 
     <div class="login-card">
@@ -252,6 +364,10 @@ def createEntrypoints(webapp):
            <input type='password' name='password' class="form-input" autocomplete="username" />         
            <label class="form-label" for="pass">Password</label>
         </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:0.5rem;">
+          <input type='checkbox' id='isAdmin' name='isAdmin' style='width:auto;height:auto;' />
+          <label for='isAdmin' style='position:static;background:transparent;padding:0;margin:0;color:rgba(255,255,255,0.9);'>Make this user an Admin</label>
+        </div>
         <div class="form-group">
           <input type='submit' value='Register' class="login-btn" />
         </div>       
@@ -264,6 +380,7 @@ def createEntrypoints(webapp):
 
     userName = request.form.get("userName")
     password = request.form.get("password")
+    is_admin_flag = 1 if request.form.get("isAdmin") in ["on", "1", "true", "True"] else 0
 
     if not userName or not password:
         return htmlBase(f"""
@@ -287,7 +404,7 @@ def createEntrypoints(webapp):
     if not app.user.isLoggedIn(sessionUUID) or not app.user.isAdmin(sessionUUID):
       return showPleaseLogin()
 
-    created = app.user.registerUser(userName, password)
+    created = app.user.registerUser(userName, password, is_admin_flag)
 
     if created:
         return htmlBase(f"""
@@ -325,4 +442,3 @@ def createEntrypoints(webapp):
           </div>
         </div>
         """, title="Registration Failed", include_styles=True)
-
