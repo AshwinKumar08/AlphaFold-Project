@@ -6,7 +6,7 @@ services:
         ports:
           - 5000:5000
         volumes:
-          - ./app:/app/app:ro
+          - ./app:/app/app:rw  #debug mood
           - ./tests:/app/tests:ro
           - ./data:/app/data:rw
           - ./logs:/app/logs:rw
@@ -49,14 +49,24 @@ services:
         container_name: af_backend
         user: www-data
         command: python3 /app/fake.py
+        # command: python3 -u /app/backend_with_ssh.py
+        # command: python3 -u /app/backend_with_watcher.py
         volumes:
           - ./backend/fake.py:/app/fake.py:ro
+          - ./backend/backend_with_ssh.py:/app/backend_with_ssh.py:ro
+          - ./backend/backend_with_watcher.py:/app/backend_with_watcher.py:ro
           - ./results:/app/results:rw
+          - ./jobs:/app/jobs:rw  # needed for both implementations... circumvents permissions conflicts
+          #- ./docker_host_key:/ssh/id_ed25519:ro  # needed for backend_with_ssh.py
+          - ./ssh:/ssh:ro
         environment:
           DB_HOST: af_db
           DB_DATABASE: af-frontend
           DB_USER: frontend
           DB_PASSWORD: frontend-secret-password
+          DB_PORT: 3306
+          HOST_IP: 172.17.0.1
+          HOST_USER: nobody  # replace with your username if using SSH
         depends_on:
           - db
         links:

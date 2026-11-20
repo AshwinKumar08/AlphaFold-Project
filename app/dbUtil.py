@@ -23,6 +23,8 @@ def getDbInstance():
                                            database=db_name)
     
     cursor = mydbInstance.cursor()
+    cursor.execute("SET time_zone = '+01:00';")
+    print("Database timezone set to +01:00", file=sys.stderr)
     cursor.execute("SELECT VERSION();")
     db_ver = cursor.fetchone()[0]
     print(f"Successfully connected to database. Database version: {db_ver}", file=sys.stderr)

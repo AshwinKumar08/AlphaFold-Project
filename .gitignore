@@ -1,5 +1,7 @@
 __pycache__
 data
+jobs
+ssh
 results
 db/data
 *.swp
@@ -9,3 +11,5 @@ db/data
 *.fasta
 *.csv
 *.zip
+*.pub
+*docker_host_key

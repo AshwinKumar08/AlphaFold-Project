@@ -1,3 +1,4 @@
+#This file is the main entry point of the Flask application
 from datetime import datetime
 from http.client import HTTPException
 import logging
@@ -8,8 +9,10 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import app.user
 import app.task
 import app.userUi
-# import util
+import app.taskUi
 
+
+# creating the Flask app
 webapp = Flask(__name__)
 webapp.wsgi_app = ProxyFix(webapp.wsgi_app, x_for=1, x_host=1)
 
@@ -31,13 +34,15 @@ def handle_exception(e):
 
     return jsonify({"error": "Internal Server Error", "message": f"Error-Id: {error_id}: An unexpected error occurred."}), 500
 
-
+#show login paga in this url /
 @webapp.route("/")
 def entrypoint_root(): 
     return userUi.showPleaseLogin()
         
 
-
+# tell Flask which URLs exist and which function should run when a user accesses them
 user.createEntrypoints(webapp)
 task.createEntrypoints(webapp)
 userUi.createEntrypoints(webapp)
+taskUi.createEntrypoints(webapp)
+
